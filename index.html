@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Validador de Series - Control v2</title>
+<!-- <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script> -->
+ <script src="tesseract.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="manifest.json">
+<style>
+:root {
+    --colorA: #3498db;
+    --colorB: #db9534;
+    --colorC: #9b59b6;
+    --colorBase: #f0f0f0;
+    --btn: #000000;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 15px;
+    background-color: var(--colorBase);
+    transition: background-color 0.4s ease;
+}
+
+h2 {
+    margin-top: 10px;
+}
+
+.contenedor {
+    max-width: 500px;
+    margin: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+}
+
+.botones-grupo {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+}
+
+button {
+    flex: 1;
+    min-width: 90px;
+    padding: 12px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 16px;
+    transition: all 0.3s ease;
+}
+
+
+button:hover {
+    transform: scale(1.05);
+    opacity: 0.9;
+}
+
+.btnA { background-color: var(--colorA); color: var(--btn); }
+.btnB { background-color: var(--colorB); color: var(--btn); }
+.btnC { background-color: var(--colorC); color: var(--btn); }
+
+.activo {
+    box-shadow: 0 0 15px rgba(0,0,0,0.4);
+    transform: scale(1.08);
+}
+
+video {
+    width: 80%;
+    border-radius: 15px;
+    margin-top: 5px;
+    margin-bottom: 5px;
+    border: 4px solid transparent;
+    transition: border-color 0.4s ease;
+}
+
+#resultado {
+    font-size: 20px;
+    font-weight: bold;
+    margin-top: 15px;
+    text-align: center;
+}
+
+/* Ajustes extra para pantallas pequeñas */
+@media (max-width: 480px) {
+
+    h2 {
+        font-size: 20px;
+    }
+
+    button {
+        font-size: 14px;
+        padding: 10px;
+    }
+
+    #resultado {
+        font-size: 18px;
+    }
+}
+</style>
+</head>
+<body>
+  <div class="contenedor">
+    <h2>Validador de Series</h2>
+
+<div class="botones-grupo">
+    <button id="btnA" class="btnA" onclick="seleccionarGrupo('A')">10 Bs.</button>
+    <button id="btnB" class="btnB" onclick="seleccionarGrupo('B')">20 Bs.</button>
+    <button id="btnC" class="btnC" onclick="seleccionarGrupo('C')">50 Bs.</button>
+</div>
+
+<p id="grupoActual">Grupo seleccionado: Ninguno</p>
+
+<button class="btn2" onclick="iniciarCamara()">Iniciar Cámara</button>
+
+<video id="video" autoplay></video>
+
+<button class="btn2" onclick="capturar()">Escanear</button>
+
+<canvas id="canvas" style="display:none;"></canvas>
+<div id="resultado"></div>
+  </div>
+
+
+
+<script>
+
+let grupoSeleccionado = null;
+let video = document.getElementById('video');
+let canvas = document.getElementById('canvas');
+let resultado = document.getElementById('resultado');
+
+function seleccionarGrupo(grupo) {
+
+    grupoSeleccionado = grupo;
+
+    if(grupo == 'A'){
+      document.getElementById("grupoActual").innerText =
+        "Grupo seleccionado: " + '10 Bs.';
+    }
+    if(grupo == 'B'){
+      document.getElementById("grupoActual").innerText =
+        "Grupo seleccionado: " + '20 Bs.';
+    }
+    if(grupo == 'C'){
+      document.getElementById("grupoActual").innerText =
+        "Grupo seleccionado: " + '50 Bs.';
+    }
+    
+
+    // Quitar activo a todos
+    document.getElementById("btnA").classList.remove("activo");
+    document.getElementById("btnB").classList.remove("activo");
+    document.getElementById("btnC").classList.remove("activo");
+
+    // Aplicar activo y cambiar entorno
+    let color;
+
+    if (grupo === "A") {
+        document.getElementById("btnA").classList.add("activo");
+        color = getComputedStyle(document.documentElement)
+                .getPropertyValue('--colorA');
+    }
+    if (grupo === "B") {
+        document.getElementById("btnB").classList.add("activo");
+        color = getComputedStyle(document.documentElement)
+                .getPropertyValue('--colorB');
+    }
+    if (grupo === "C") {
+        document.getElementById("btnC").classList.add("activo");
+        color = getComputedStyle(document.documentElement)
+                .getPropertyValue('--colorC');
+    }
+
+    // Cambiar fondo
+    document.body.style.backgroundColor = color + "20";
+
+    // Cambiar borde del video
+    document.getElementById("video").style.borderColor = color;
+}
+
+function iniciarCamara() {
+    navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "environment" }
+    })
+    .then(stream => video.srcObject = stream)
+    .catch(err => alert("Error al acceder a la cámara"));
+}
+
+/* ===== RANGOS ===== */
+
+const rangos = {
+
+A: [
+[87280145,91646549],
+[96650001,97100000],
+[99800001,100250000],
+[100250001,100700000],
+[109250001,109700000],
+[110600001,111050000],
+[111050001,111500000],
+[111950001,112400000],
+[112400001,112850000],
+[112850001,113300000],
+[114200001,114650000],
+[114650001,115100000],
+[115100001,115550000],
+[118700001,119150000],
+[119150001,119600000],
+[120500001,120950000]
+],
+
+B: [
+[87280145,91646549],
+[96650001,97100000],
+[99800001,100250000],
+[100250001,100700000],
+[109250001,109700000],
+[110600001,111050000],
+[111050001,111500000],
+[111950001,112400000],
+[112400001,112850000],
+[112850001,113300000],
+[114200001,114650000],
+[114650001,115100000],
+[115100001,115550000],
+[118700001,119150000],
+[119150001,119600000],
+[120500001,120950000]
+],
+
+C: [
+[67250001,67700000],
+[69050001,69500000],
+[69500001,69950000],
+[69950001,70400000],
+[70400001,70850000],
+[70850001,71300000],
+[76310012,85139995],
+[86400001,86850000],
+[90900001,91350000],
+[91800001,92250000]
+]
+
+};
+
+/* =================== */
+
+function numeroEnRango(numero, grupo) {
+    for (let rango of rangos[grupo]) {
+        if (numero >= rango[0] && numero <= rango[1]) {
+            return true;
+        }
+    }
+    return false;
+}
+
+function capturar() {
+
+    if (!grupoSeleccionado) {
+        alert("Selecciona un grupo primero");
+        return;
+    }
+
+    let context = canvas.getContext('2d');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    context.drawImage(video, 0, 0);
+
+    resultado.innerHTML = "Procesando...";
+
+Tesseract.recognize(canvas, 'eng', {
+    tessedit_char_whitelist: '0123456789'
+})
+.then(({ data: { text } }) => {
+
+    let numeros = text.match(/\d+/g);
+    let numeroDetectado = null;
+
+    if (numeros) {
+        for (let num of numeros) {
+            if (num.length >= 8) {
+                numeroDetectado = parseInt(num);
+                break;
+            }
+        }
+    }
+
+    if (!numeroDetectado) {
+        resultado.innerHTML = "❌ No se detectó número válido";
+        resultado.style.color = "red";
+        return;
+    }
+
+    let pertenece = numeroEnRango(numeroDetectado, grupoSeleccionado);
+
+    if (pertenece) {
+        /* resultado.innerHTML =
+            "❌ YA PERTENECE AL GRUPO " + grupoSeleccionado +
+            "<br>" + numeroDetectado; */
+          resultado.innerHTML =
+            "❌ YA PERTENECE AL GRUPO " +
+            "<br>" + numeroDetectado;
+        resultado.style.color = "red";
+    } else {
+        /* resultado.innerHTML =
+            "✅ NO PERTENECE AL GRUPO " + grupoSeleccionado +
+            "<br>" + numeroDetectado; */
+            resultado.innerHTML =
+            "✅ NO PERTENECE AL GRUPO " +
+            "<br>" + numeroDetectado;
+        resultado.style.color = "green";
+    }
+
+});
+}
+
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js');
+}
+</script>
+</body>
+</html>
