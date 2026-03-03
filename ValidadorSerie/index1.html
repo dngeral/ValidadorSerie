@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Detector de Series</title>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
+<style>
+body {
+    font-family: Arial;
+    text-align: center;
+    padding: 20px;
+}
+video, canvas {
+    width: 300px;
+    margin: 10px 0;
+}
+#resultado {
+    font-size: 24px;
+    font-weight: bold;
+    margin-top: 20px;
+}
+</style>
+</head>
+
+<body>
+
+<h2>Detector de Series</h2>
+
+<button onclick="iniciarCamara()">Iniciar Cámara</button>
+<br>
+<video id="video" autoplay></video>
+<br>
+<button onclick="capturar()">Escanear</button>
+
+<canvas id="canvas" style="display:none;"></canvas>
+
+<div id="resultado"></div>
+
+<script>
+
+let video = document.getElementById('video');
+let canvas = document.getElementById('canvas');
+let resultado = document.getElementById('resultado');
+
+function iniciarCamara() {
+    navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "environment" }
+    })
+    .then(stream => {
+        video.srcObject = stream;
+    })
+    .catch(err => {
+        alert("Error al acceder a la cámara");
+        console.log(err);
+    });
+}
+
+function capturar() {
+
+    let context = canvas.getContext('2d');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    context.drawImage(video, 0, 0);
+
+    resultado.innerHTML = "Procesando...";
+
+    Tesseract.recognize(
+        canvas,
+        'eng'
+    ).then(({ data: { text } }) => {
+
+      let numerosEncontrados = text.match(/\d+/g);
+let numeroDetectado = null;
+
+if (numerosEncontrados) {
+    for (let num of numerosEncontrados) {
+        if (num.length >= 8) { // ahora acepta 8 o 9 o más
+            numeroDetectado = parseInt(num);
+            break;
+        }
+    }
+}
+
+if (numeroDetectado) {
+
+    let estaEnSerieBloqueada = false;
+
+    if (
+        (numeroDetectado >= 67250001 && numeroDetectado <= 67700000) ||
+        (numeroDetectado >= 69050001 && numeroDetectado <= 69500000) ||
+        (numeroDetectado >= 87280145 && numeroDetectado <= 91646549) ||
+        (numeroDetectado >= 77100001 && numeroDetectado <= 77550000)
+    ) {
+        estaEnSerieBloqueada = true;
+    }
+
+    if (estaEnSerieBloqueada) {
+        resultado.innerHTML = "❌ SERIE NO PERMITIDA<br>" + numeroDetectado;
+        resultado.style.color = "red";
+    } else {
+        resultado.innerHTML = "✅ SERIE VÁLIDA<br>" + numeroDetectado;
+        resultado.style.color = "green";
+    }
+
+} else {
+    resultado.innerHTML = "❌ No se detectó un número válido";
+    resultado.style.color = "red";
+}
+        
+    });
+}
+
+</script>
+
+</body>
+</html>
